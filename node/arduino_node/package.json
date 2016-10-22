@@ -1,0 +1,11 @@
+{
+    "name": "arduino-node",
+    "main": "server.js",
+    "dependencies": {
+        "serialport": "~4.0.1",
+        "plotly": "latest",
+        "johnny-five" : "latest",
+        "express" : "latest",
+        "body-parser" : "latest"
+    }
+}
