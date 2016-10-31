@@ -9,17 +9,19 @@ var bodyParser = require('body-parser');
 
 //configuracoes do arduino
 var pin_lm35 = "A0";
-var pin_aquecedor = 13;
+var pin_aquecedor = 8;
 var pin_bomba_agua = 10;
+var pin_led_aquecedor = 13;
 
 //configuracoes temperatura
-var temp_min = 25;
-var temp_max = 28;
+var temp_min = 29;
+var temp_max = 35;
 
 //perifericos
-var aquecedor; // por enqunato é um led
+var aquecedor;
 var bomba_agua; // por enquanto é um led
 var temperature; //lm35
+var led_aquecedor; 
 
 
 //configuracoes webserver
@@ -52,8 +54,9 @@ plotly.plot(initData, initGraphOptions, function (err, msg) {
 
 //inicia o arduino
 board.on("ready", function() {
-  aquecedor = new five.Led(pin_aquecedor);
+  aquecedor = new five.Relay(pin_aquecedor);
   bomba_agua = new five.Pin(pin_bomba_agua);
+  led_aquecedor = new five.Led(pin_led_aquecedor);
 
   //temperature
    temperature = new five.Thermometer({
@@ -65,22 +68,16 @@ board.on("ready", function() {
    console.log('Arduino Iniciado');
 
    ligaBombaAgua();
-
-   temperature.on("data", function() {
-	  	var streamObject = JSON.stringify({ x : getDateString(), y : this.celsius });
-	  	stream1.write(streamObject+'\n');
-	  	//console.log('enviado para o grafico ' + streamObject);
-	  	if (this.celsius >= temp_max) {
-	  		desligaAquecedor();
-	  	} else if (this.celsius < temp_min) {
-	  		ligaAquecedor();
-	  	}
-
-	});
+   ligaAquecedor();
+   setTimeout(function () {
+   		desligaAquecedor();
+   		console.log("terminou");
+   }, 10000)
+  
 
 	temperature.on("change", function() {
 		temp_atual = this.celsius;
-	  	//console.log("Temperatura Mudou para: " + this.celsius + " ˚C ");
+	  	console.log("Temperatura Mudou para: " + this.celsius + " ˚C ");
 	});
 
 });
@@ -147,11 +144,13 @@ console.log('webserver iniciado');
 function ligaAquecedor() {
 	console.log("Ligando aquecedor");
 	aquecedor.on();
+	led_aquecedor.on();
 }
 
 function desligaAquecedor() {
 	console.log("Desligando aquecedor");
 	aquecedor.off();
+	led_aquecedor.off();
 }
 
 function ligaBombaAgua() {
